@@ -1,11 +1,14 @@
 // src/App.jsx
 import { useState } from 'react';
+import { useRef } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 const styles = ['style1.css', 'style2.css', 'style3.css'];
 
 function App() {
+  const uiRef = useRef(null);
+
   const [name, setName] = useState('Your Name');
   const [activeTab, setActiveTab] = useState('Home');
   const [styleIndex, setStyleIndex] = useState(0);
@@ -52,60 +55,34 @@ function App() {
 
   const handleDownloadPage = async () => {
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+    const originalTab = activeTab;
 
     for (let i = 0; i < tabs.length; i++) {
       const tab = tabs[i];
-      const container = document.createElement('div');
-      container.style.width = '800px';
-      container.style.padding = '2rem';
-      container.style.background = 'white';
-      container.style.color = 'black';
-      container.style.fontFamily = 'Arial';
+      setActiveTab(tab);
 
-      const heading = document.createElement('h1');
-      heading.textContent = tab;
-      container.appendChild(heading);
+      // Wait for React to re-render DOM
+      await new Promise((resolve) => setTimeout(resolve, 300)); // Small delay for rendering
 
-      if (i === 0 && profilePic) {
-        const img = document.createElement('img');
-        img.src = profilePic;
-        img.style.width = '100px';
-        img.style.height = '100px';
-        img.style.borderRadius = '50%';
-        img.style.objectFit = 'cover';
-        img.style.marginBottom = '1rem';
-        container.appendChild(img);
-      }
-
-      const nameEl = document.createElement('p');
-      nameEl.innerText = `Name: ${name}`;
-      nameEl.style.fontWeight = 'bold';
-      container.appendChild(nameEl);
-
-      const content = document.createElement('p');
-      content.innerHTML = (tabContent[tab] || '').replace(/\n/g, '<br/>');
-      container.appendChild(content);
-
-      document.body.appendChild(container);
-      const canvas = await html2canvas(container, {
+      const canvas = await html2canvas(uiRef.current, {
         scale: 2,
         useCORS: true
       });
-      document.body.removeChild(container);
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pageWidth;
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = (imgProps.height * pageWidth) / imgProps.width;
 
       if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
     }
 
+    setActiveTab(originalTab); // Restore original tab
     pdf.save(`${name.replace(/\s+/g, '_')}_portfolio.pdf`);
-  };
+};
+
+
 
   return (
     <div className="main-container">
@@ -119,7 +96,7 @@ function App() {
         <button onClick={handleDownloadPage}>Download Page</button>
       </div>
 
-      <div className="ui-container" id="ui-box">
+      <div className="ui-container" id="ui-box" ref={uiRef}>  
         <div className="sidebar">
           <div
             className="profile-pic"
@@ -213,4 +190,3 @@ function App() {
 }
 
 export default App;
-

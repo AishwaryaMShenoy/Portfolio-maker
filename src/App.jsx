@@ -1,6 +1,5 @@
 // src/App.jsx
-import { useState } from 'react';
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -37,6 +36,36 @@ function App() {
     }
   };
 
+  const handleRenameSection = () => {
+    const newName = prompt(`Rename section '${activeTab}' to:`);
+    if (newName && !tabs.includes(newName)) {
+      const newTabs = tabs.map(t => t === activeTab ? newName : t);
+      const newTabContent = { ...tabContent };
+      newTabContent[newName] = newTabContent[activeTab];
+      delete newTabContent[activeTab];
+      setTabs(newTabs);
+      setTabContent(newTabContent);
+      setActiveTab(newName);
+    } else if (tabs.includes(newName)) {
+      alert('Section with this name already exists.');
+    }
+  };
+
+  const handleDeleteSection = () => {
+    if (tabs.length === 1) {
+      alert("Cannot delete the last remaining section.");
+      return;
+    }
+    if (window.confirm(`Are you sure you want to delete '${activeTab}' section?`)) {
+      const newTabs = tabs.filter(t => t !== activeTab);
+      const newTabContent = { ...tabContent };
+      delete newTabContent[activeTab];
+      setTabs(newTabs);
+      setTabContent(newTabContent);
+      setActiveTab(newTabs[0]);
+    }
+  };
+
   const handleContentChange = (e) => {
     setTabContent({ ...tabContent, [activeTab]: e.target.value });
   };
@@ -60,9 +89,7 @@ function App() {
     for (let i = 0; i < tabs.length; i++) {
       const tab = tabs[i];
       setActiveTab(tab);
-
-      // Wait for React to re-render DOM
-      await new Promise((resolve) => setTimeout(resolve, 300)); // Small delay for rendering
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       const canvas = await html2canvas(uiRef.current, {
         scale: 2,
@@ -78,11 +105,9 @@ function App() {
       pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
     }
 
-    setActiveTab(originalTab); // Restore original tab
+    setActiveTab(originalTab);
     pdf.save(`${name.replace(/\s+/g, '_')}_portfolio.pdf`);
-};
-
-
+  };
 
   return (
     <div className="main-container">
@@ -93,10 +118,12 @@ function App() {
           <option value="2">Style 3</option>
         </select>
         <button onClick={handleAddSection}>Add Section</button>
+        <button onClick={handleRenameSection}>Rename Section</button>
+        <button onClick={handleDeleteSection}>Delete Section</button>
         <button onClick={handleDownloadPage}>Download Page</button>
       </div>
 
-      <div className="ui-container" id="ui-box" ref={uiRef}>  
+      <div className="ui-container" id="ui-box" ref={uiRef}>
         <div className="sidebar">
           <div
             className="profile-pic"

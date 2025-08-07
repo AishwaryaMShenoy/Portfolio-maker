@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const styles = ['style1.css', 'style2.css', 'style3.css'];
+const styles = ['style1.css', 'style2.css', 'style3.css','style4.css'];
 
 function App() {
   const uiRef = useRef(null);
@@ -115,7 +115,8 @@ function App() {
         <select onChange={handleStyleChange} value={styleIndex}>
           <option value="0">Classic</option>
           <option value="1">Dandellion</option>
-          <option value="2">Style 3</option>
+          <option value="2">Othello</option>
+          <option value="3">Amethist</option>
         </select>
         <button onClick={handleAddSection}>Add Section</button>
         <button onClick={handleRenameSection}>Rename Section</button>
